@@ -34,41 +34,41 @@ activity = discord.CustomActivity(name="Drinking the Good Stuff!")
 
 bot = commands.Bot(command_prefix='!', intents=intents, activity=activity)
 
+def timestamp():
+	return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+# Dictionary to store guild-specific information
+guild_store_hash = {}
+
+class GuildInfo:
+		def __init__(self, system_channel, channel_id, nix_role):
+				self.system_channel = system_channel
+				self.channel_id = channel_id
+				self.nix_role = nix_role
+
 @bot.event
 async def on_ready():
-		print(f'Logged in as {bot.user.name}')
+		print(f'{timestamp()}\tLogged in as {bot.user.name}')
 		for guild in bot.guilds:
 				channel = discord.utils.get(guild.channels, name=CHANNEL_NAME)
-				if channel:
-						global CHANNEL_ID
-						CHANNEL_ID = channel.id
-
-				system_channel = discord.utils.get(guild.channels, name=SYSTEM_CHANNEL_NAME)
-				if system_channel:
-						global SYSTEM_CHANNEL_ID
-						SYSTEM_CHANNEL_ID = system_channel.id
-
+				system_channel = guild.system_channel
 				role = discord.utils.get(guild.roles, name=ROLE_NAME)
-				if role:
-						global NIX_ROLE
-						NIX_ROLE = role
-				break
 
-
-validate_url = lambda link: validators.url(link)
+				# Create an instance of GuildInfo for this guild and store it in the guild_info dictionary
+				guild_store_hash[guild.id] = GuildInfo(system_channel, channel.id, role)
 
 @bot.event
 async def on_message(message):
-		if NIX_ROLE not in message.author.roles and message.channel.id == CHANNEL_ID:
+		guild_store = guild_store_hash.get(message.guild.id)
+		if guild_store.nix_role not in message.author.roles and message.channel.id == guild_store.channel_id:
 				links = re.findall(URL_PATTERN, message.content)
-				print(f'{ datetime.now().strftime("%Y-%m-%d %H:%M:%S")}\t{message.author} posted {len(links)} links to {message.channel}: {message.content}')
-				if any(validate_url(link) for link in links):
-						await message.author.add_roles(NIX_ROLE)
-						system_channel = bot.get_channel(SYSTEM_CHANNEL_ID)
-						await system_channel.send(f'{message.author.mention} is now one of the Kool Kids!')
+				print(f'{timestamp()}\t{message.author} posted {len(links)} links to {message.channel}: {message.content}')
+				if any(validators.url(link) for link in links):
+						await message.author.add_roles(guild_store.nix_role)
+						await guild_store.system_channel.send(f'{message.author.mention} is now one of the Kool Kids!')
 
 def signal_handler(signal, frame):
-		print('Stopping the bot...')
+		print(f'{timestamp()}\tStopping the bot...')
 		sys.exit(0)
 
 if TOKEN:
@@ -76,4 +76,4 @@ if TOKEN:
 		signal.signal(signal.SIGTERM, signal_handler)
 		bot.run(TOKEN)
 else:
-		print('Discord bot token not found in the environment variable DISCORD_TOKEN')
+		print(f'{timestamp()}\tDiscord bot token not found in the environment variable DISCORD_TOKEN')
