@@ -30,7 +30,9 @@ intents.message_content = True
 intents.typing = False
 intents.presences = False
 
-bot = commands.Bot(command_prefix='!', intents=intents, activity=discord.Game(name="Drinking the Good Stuff!"))
+activity = discord.CustomActivity(name="Drinking the Good Stuff!")
+
+bot = commands.Bot(command_prefix='!', intents=intents, activity=activity)
 
 @bot.event
 async def on_ready():

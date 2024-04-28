@@ -134,6 +134,14 @@ RUN mkdir /cache && \
 
 CMD [ "python3", "app.py" ]
 
+# Use environment variables to set default values
+ARG WATCHTOWER=true
+ARG AUTOHEAL=true
+
+# Set labels using the ARG variables
+LABEL com.centurylinklabs.watchtower.enable=${WATCHTOWER}
+LABEL autoheal=${AUTOHEAL}
+
 ##############################
 # Begin devcontainer 
 ##############################

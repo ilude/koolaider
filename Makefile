@@ -6,6 +6,13 @@ PROJECT_NAME := $(shell basename $(shell pwd))
 ifneq (,$(wildcard .devcontainer/.env))
 	include .devcontainer/.env
 	export
+	ENV_FILE = .devcontainer/.env
+endif
+
+ifneq (,$(wildcard .env))
+	include .env
+	export
+	ENV_FILE = .env
 endif
 
 run: $(SITE_PACKAGES)
@@ -18,17 +25,20 @@ $(SITE_PACKAGES): requirements.txt
 	touch requirements.txt
 
 
-build:
+build-image:
 	docker build --target production -t ghcr.io/ilude/$(PROJECT_NAME):latest .
 
 push-image: build-image
 	docker push ghcr.io/ilude/$(PROJECT_NAME)
 
-run-image: build-image
-	docker run -it --rm  ghcr.io/ilude/$(PROJECT_NAME):latest
+stop-image:
+	-docker stop $(PROJECT_NAME)
+
+run-image: build-image stop-image
+	docker run -d -it --rm --env-file $(ENV_FILE) --name $(PROJECT_NAME) ghcr.io/ilude/$(PROJECT_NAME):latest
 
 bash-image: build-image
-	docker run -it --rm  ghcr.io/ilude/$(PROJECT_NAME):latest bash
+	docker run -it --rm --env-file $(ENV_FILE) --name $(PROJECT_NAME) ghcr.io/ilude/$(PROJECT_NAME):latest bash
 
 ansible:
 	LC_ALL=C.UTF-8 ansible-playbook --inventory 127.0.0.1 --connection=local .devcontainer/ansible/setup-container.yml
