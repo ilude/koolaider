@@ -100,7 +100,7 @@ jobs:
           username: Koolaider
           color: '#cc0088'
           avatarUrl: https://github.com/ilude/koolaider/blob/main/app/images/discord_icon_v1.png?raw=true
-          description: OH YA The ${{ github.event.repository.name }} image ${{ fromJSON(steps.meta.outputs.json).labels[0] }}  has been updated!
+          description: OH YA The ${{ github.event.repository.name }} image ${{ fromJSON(steps.meta.outputs.json).tags[0] }}  has been updated!
           details: Based on ${{ github.event.head_commit.url }}
           footer: Koolaider became self aware
           webhookUrl: ${{ secrets.DISCORD_WEBHOOK }}
