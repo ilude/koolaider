@@ -1,0 +1,13 @@
+.env
+__pycache__/
+
+app/feed_cache
+app/configs/*.yml
+!app/configs/.keep
+
+app/static/.*-cache
+app/static/assets
+
+notebooks/data/
+
+cache/
