@@ -1,10 +1,11 @@
+from datetime import datetime
 import os
 import signal
 import sys
+import re
 import discord
 from discord.ext import commands
 import validators
-import logging
 
 # Get the bot token from the environment variable
 TOKEN = os.environ.get('DISCORD_TOKEN')
@@ -21,14 +22,15 @@ ROLE_NAME = 'Nix User'
 # List of common image file extensions
 IMAGE_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.tiff', '.webp']
 
+# Regular expression pattern to match non-image URLs
+URL_PATTERN = r'https?://\S+?(?!(?:' + '|'.join(re.escape(ext) for ext in IMAGE_EXTENSIONS) + r'))\S*'
+
 intents = discord.Intents.default()
 intents.message_content = True
 intents.typing = False
 intents.presences = False
 
-activity = discord.CustomActivity(name='Drinking the Good Stuff!')
-
-bot = commands.Bot(command_prefix='!', intents=intents, activity=activity)
+bot = commands.Bot(command_prefix='!', intents=intents, activity=discord.Game(name="Drinking the Good Stuff!"))
 
 @bot.event
 async def on_ready():
@@ -50,17 +52,18 @@ async def on_ready():
 						NIX_ROLE = role
 				break
 
+
+validate_url = lambda link: validators.url(link)
+
 @bot.event
 async def on_message(message):
-		print(f'{message.author} posted to {message.channel}: {message.content}')
-		if NIX_ROLE not in message.author.roles and message.channel.id == CHANNEL_ID and message.content.startswith('http'):
-					link = message.content.strip()
-					print(f'Found link: {link} in channel {CHANNEL_ID}. Valid: {validators.url(link)} and image: {not any(link.endswith(ext) for ext in IMAGE_EXTENSIONS)}')
-					if validators.url(link) and not any(link.endswith(ext) for ext in IMAGE_EXTENSIONS):
-							# images that make fun of the kool kids do not count!
-							await message.author.add_roles(NIX_ROLE)
-							system_channel = bot.get_channel(SYSTEM_CHANNEL_ID)
-							await system_channel.send(f'{message.author.mention} is now one of the Kool Kids!')
+		if NIX_ROLE not in message.author.roles and message.channel.id == CHANNEL_ID:
+				links = re.findall(URL_PATTERN, message.content)
+				print(f'{ datetime.now().strftime("%Y-%m-%d %H:%M:%S")}\t{message.author} posted {len(links)} links to {message.channel}: {message.content}')
+				if any(validate_url(link) for link in links):
+						await message.author.add_roles(NIX_ROLE)
+						system_channel = bot.get_channel(SYSTEM_CHANNEL_ID)
+						await system_channel.send(f'{message.author.mention} is now one of the Kool Kids!')
 
 def signal_handler(signal, frame):
 		print('Stopping the bot...')
