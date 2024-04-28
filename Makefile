@@ -40,5 +40,8 @@ run-image: build-image stop-image
 bash-image: build-image
 	docker run -it --rm --env-file $(ENV_FILE) --name $(PROJECT_NAME) ghcr.io/ilude/$(PROJECT_NAME):latest bash
 
+logs:
+	docker logs -f $(PROJECT_NAME)
+
 ansible:
 	LC_ALL=C.UTF-8 ansible-playbook --inventory 127.0.0.1 --connection=local .devcontainer/ansible/setup-container.yml
